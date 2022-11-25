@@ -4,6 +4,7 @@ import (
 	"GoMicroservice/database"
 	"GoMicroservice/router"
 	"fmt"
+	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
 	"log"
@@ -13,6 +14,7 @@ import (
 type config struct {
 	Port             string `mapstructure:"port"`
 	ConnectionString string `mapstructure:"connection_string"`
+	LiveTest         string `mapstructure:"live_variable"`
 }
 
 var AppConfig *config
@@ -30,6 +32,13 @@ func main() {
 
 	// register routes
 	router.RegisterUserRoutes(muxRouter)
+
+	viper.WatchConfig()
+	viper.OnConfigChange(func(e fsnotify.Event) {
+		fmt.Println("Config file changed:", e.Name)
+		LoadAppConfig()
+		fmt.Println("New Config  :", AppConfig)
+	})
 
 	// start go server
 	log.Println(fmt.Sprintf("Starting Server on port %s", AppConfig.Port))
